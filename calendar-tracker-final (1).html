@@ -1,0 +1,2667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Planner & Period Tracker</title>
+    <style id="theme-styles">
+        /* Base styles and default theme */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Default theme variables */
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #764ba2;
+            --text-primary: #333;
+            --bg-primary: rgba(255, 255, 255, 0.95);
+            --day-bg: white;
+            --border-color: #e0e0e0;
+            --accent-color: #667eea;
+            --accent-hover: #764ba2;
+            --task-bg: rgba(102, 126, 234, 0.1);
+            --task-border: #667eea;
+            --period-bg: rgba(255, 107, 107, 0.15);
+            --period-color: #ff6b6b;
+            --ovulation-bg: rgba(0, 123, 255, 0.15);
+            --ovulation-color: #007bff;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .app-header {
+            background: var(--bg-primary);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-navigation {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: var(--task-bg);
+            color: var(--accent-color);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .tab-btn.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .tab-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+        }
+
+        .view-btn {
+            padding: 8px 16px;
+            border: none;
+            background: var(--accent-color);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .view-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .view-btn.active {
+            background: var(--accent-hover);
+        }
+
+        .week-navigation {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            padding: 8px 15px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .today-btn {
+            background: linear-gradient(135deg, var(--success-color) 0%, #20c997 100%);
+        }
+
+        .today-btn:hover {
+            background: linear-gradient(135deg, #20c997 0%, var(--success-color) 100%);
+            transform: translateY(-2px);
+        }
+
+        .current-week {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: var(--text-primary);
+            min-width: 280px;
+            text-align: center;
+        }
+
+        .main-content {
+            background: var(--bg-primary);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            min-height: 600px;
+            overflow-x: auto;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Mobile Goal Widget */
+        .mobile-goal-widget {
+            display: none;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            padding: 10px;
+            margin: 0 10px 10px 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .mobile-goal-widget:hover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+            transform: scale(1.02);
+        }
+
+        .goal-mini {
+            display: flex;
+            justify-content: space-around;
+            font-size: 11px;
+        }
+
+        .goal-stat {
+            text-align: center;
+        }
+
+        .goal-label {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .goal-value {
+            color: var(--accent-hover);
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Weekly View */
+        .weekly-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .workout-tracker {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .workout-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .workout-table th,
+        .workout-table td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .workout-table th {
+            background: var(--accent-color);
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .workout-table th:first-child {
+            text-align: left;
+            padding-left: 15px;
+        }
+
+        .workout-label {
+            text-align: left !important;
+            font-weight: 600;
+            color: var(--accent-color);
+            padding-left: 15px !important;
+        }
+
+        .workout-input {
+            width: 45px;
+            border: none;
+            background: transparent;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            padding: 5px;
+        }
+
+        .workout-input:focus {
+            outline: none;
+            background: var(--task-bg);
+            border-radius: 3px;
+        }
+
+        .percent-good {
+            color: var(--success-color);
+            font-weight: bold;
+        }
+
+        .percent-ok {
+            color: var(--warning-color);
+            font-weight: bold;
+        }
+
+        .percent-low {
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+
+        .weekly-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            min-height: 400px;
+        }
+
+        .day-column {
+            background: var(--day-bg);
+            border-radius: 15px;
+            padding: 15px;
+            min-height: 400px;
+            border: 2px solid var(--border-color);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .day-column:hover {
+            border-color: var(--accent-color);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .day-column.today {
+            border-color: var(--accent-color);
+            background: linear-gradient(to bottom, var(--task-bg) 0%, var(--day-bg) 50px);
+        }
+
+        .day-column.period {
+            background: linear-gradient(to bottom, var(--period-bg) 0%, var(--day-bg) 100px);
+            border-color: var(--period-color);
+        }
+
+        .day-column.ovulation {
+            background: linear-gradient(to bottom, var(--ovulation-bg) 0%, var(--day-bg) 100px);
+            border-color: var(--ovulation-color);
+        }
+
+        .day-header {
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .day-column.today .day-header {
+            color: white;
+            background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-hover) 100%);
+            padding: 10px;
+            margin: -15px -15px 10px -15px;
+            border-radius: 13px 13px 0 0;
+        }
+
+        .day-date {
+            font-size: 1.2em;
+        }
+
+        .task-container {
+            min-height: 300px;
+        }
+
+        .task-item {
+            padding: 10px;
+            margin: 8px 0;
+            background: var(--task-bg);
+            border-radius: 8px;
+            cursor: move;
+            transition: all 0.3s;
+            border-left: 3px solid var(--task-border);
+            position: relative;
+        }
+
+        .task-item:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateX(5px);
+        }
+
+        .task-item.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+
+        .task-item.drag-over-top {
+            border-top: 3px solid var(--accent-color);
+        }
+
+        .task-item.drag-over-bottom {
+            border-bottom: 3px solid var(--accent-color);
+        }
+
+        .task-item.completed {
+            text-decoration: line-through;
+            opacity: 0.6;
+            border-left-color: var(--success-color);
+        }
+
+        .task-time {
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 3px;
+        }
+
+        .drop-zone {
+            min-height: 50px;
+            border: 2px dashed transparent;
+            transition: all 0.3s;
+            border-radius: 8px;
+        }
+
+        .drop-zone.drag-over {
+            border-color: var(--accent-color);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        /* Monthly View */
+        .monthly-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+
+        .month-day-header {
+            text-align: center;
+            font-weight: bold;
+            padding: 10px;
+            color: var(--accent-color);
+        }
+
+        .month-day-cell {
+            aspect-ratio: 1;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            background: var(--day-bg);
+            overflow: hidden;
+            color: var(--text-primary);
+        }
+
+        .month-day-cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-color: var(--accent-color);
+        }
+
+        .month-day-cell.other-month {
+            opacity: 0.3;
+        }
+
+        .month-day-cell.today {
+            background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-hover) 100%);
+            color: white;
+            font-weight: bold;
+        }
+
+        .month-day-cell.period {
+            background: linear-gradient(135deg, var(--period-color) 0%, #ff8787 100%);
+            color: white;
+        }
+
+        .month-day-cell.ovulation {
+            background: linear-gradient(135deg, var(--ovulation-color) 0%, #0099ff 100%);
+            color: white;
+        }
+
+        .month-day-number {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .month-tasks {
+            font-size: 0.7em;
+            max-height: 50px;
+            overflow-y: auto;
+        }
+
+        /* Notes and Lists Styles */
+        .notes-container {
+            padding: 20px;
+        }
+
+        .note-item, .list-item {
+            background: var(--day-bg);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 2px solid var(--border-color);
+            transition: all 0.3s;
+            cursor: move;
+            position: relative;
+        }
+
+        .note-item:hover, .list-item:hover {
+            border-color: var(--accent-color);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .note-item.dragging, .list-item.dragging {
+            opacity: 0.5;
+        }
+
+        .note-title, .list-title-input {
+            width: 100%;
+            font-weight: bold;
+            color: var(--accent-color);
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+
+        .note-title:focus, .list-title-input:focus {
+            outline: none;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 5px;
+        }
+
+        .note-content {
+            width: 100%;
+            min-height: 100px;
+            border: none;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.5;
+            background: transparent;
+            color: var(--text-primary);
+        }
+
+        .note-content:focus {
+            outline: none;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 5px;
+            padding: 5px;
+        }
+
+        .delete-note, .delete-list {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .note-item:hover .delete-note,
+        .list-item:hover .delete-list {
+            opacity: 1;
+        }
+
+        .list-items {
+            list-style: none;
+        }
+
+        .list-entry {
+            padding: 5px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: move;
+        }
+
+        .list-entry.dragging {
+            opacity: 0.5;
+        }
+
+        .list-entry.drag-over-top {
+            border-top: 2px solid var(--accent-color);
+        }
+
+        .list-entry.drag-over-bottom {
+            border-bottom: 2px solid var(--accent-color);
+        }
+
+        .list-checkbox {
+            cursor: pointer;
+        }
+
+        .list-text {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            padding: 5px;
+            color: var(--text-primary);
+        }
+
+        .list-text:focus {
+            outline: none;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 3px;
+        }
+
+        .list-text.completed {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        .add-list-item {
+            width: 100%;
+            border: 1px dashed var(--accent-color);
+            background: transparent;
+            padding: 8px;
+            border-radius: 5px;
+            margin-top: 10px;
+            color: var(--accent-color);
+            font-size: 14px;
+        }
+
+        .add-list-item:focus {
+            outline: none;
+            border-style: solid;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        .modal-content {
+            background: var(--bg-primary);
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            animation: slideUp 0.3s ease-out;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            z-index: 1;
+            color: var(--text-primary);
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--text-primary);
+            opacity: 0.8;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+            background: var(--day-bg);
+            color: var(--text-primary);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 8px;
+        }
+
+        .checkbox-group.period-selected {
+            background: rgba(255, 107, 107, 0.1);
+            border: 2px solid var(--period-color);
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-hover) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger-color) 0%, #ff8787 100%);
+            color: white;
+        }
+
+        /* Add button */
+        .add-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-hover) 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 2em;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .add-btn:hover {
+            transform: scale(1.1) rotate(90deg);
+        }
+
+        /* Settings */
+        .settings-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .settings-group {
+            background: var(--day-bg);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .settings-group h3 {
+            color: var(--accent-color);
+            margin-bottom: 15px;
+        }
+
+        .goal-input-group {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .goal-label {
+            flex: 1;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .goal-input {
+            width: 80px;
+            padding: 5px;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            text-align: center;
+            background: var(--day-bg);
+            color: var(--text-primary);
+        }
+
+        .theme-selector {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            background: var(--day-bg);
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .app-header {
+                padding: 15px;
+            }
+
+            .header-controls {
+                flex-direction: column;
+            }
+
+            .week-navigation {
+                order: 2;
+                width: 100%;
+                justify-content: center;
+            }
+
+            .view-toggle {
+                order: 1;
+                width: 100%;
+                justify-content: center;
+            }
+
+            .current-week {
+                min-width: auto;
+                font-size: 1em;
+            }
+
+            .workout-tracker {
+                display: none;
+            }
+
+            .mobile-goal-widget {
+                display: block;
+            }
+
+            .weekly-grid {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .day-column {
+                min-height: auto;
+            }
+
+            .monthly-grid {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 5px;
+            }
+
+            .month-day-cell {
+                font-size: 0.8em;
+                padding: 5px;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+            }
+
+            .add-btn {
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="app-header">
+            <div class="tab-navigation">
+                <button class="tab-btn active" onclick="switchTab('calendar')">Calendar</button>
+                <button class="tab-btn" onclick="switchTab('notes')">Notes</button>
+                <button class="tab-btn" onclick="switchTab('lists')">Lists</button>
+                <button class="tab-btn" onclick="switchTab('settings')">Settings</button>
+            </div>
+            
+            <div class="header-controls">
+                <div class="week-navigation">
+                    <button class="nav-btn" onclick="changeWeek(-1)">← Previous</button>
+                    <button class="nav-btn today-btn" onclick="jumpToToday()">Today</button>
+                    <div class="current-week" id="current-week">Week of Nov 4, 2024</div>
+                    <button class="nav-btn" onclick="changeWeek(1)">Next →</button>
+                </div>
+                <div class="view-toggle">
+                    <button class="view-btn active" onclick="toggleView('weekly')">Weekly</button>
+                    <button class="view-btn" onclick="toggleView('monthly')">Monthly</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Calendar Tab -->
+            <div id="calendar-tab" class="tab-content active">
+                <!-- Mobile Goal Widget -->
+                <div class="mobile-goal-widget" id="mobile-goal-widget" onclick="openWorkoutModal()">
+                    <div class="goal-mini" id="goal-mini-display">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Weekly View -->
+                <div id="weekly-view" class="weekly-container" style="display: block;">
+                    <!-- Desktop Workout Tracker -->
+                    <div class="workout-tracker">
+                        <h3 style="color: var(--accent-color); margin-bottom: 10px;">Weekly Workout Tracker</h3>
+                        <table class="workout-table">
+                            <thead>
+                                <tr id="workout-header">
+                                    <!-- Will be populated by JavaScript -->
+                                </tr>
+                            </thead>
+                            <tbody id="workout-tbody">
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Weekly Calendar -->
+                    <div class="weekly-grid" id="weekly-grid">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Monthly View -->
+                <div id="monthly-view" style="display: none;">
+                    <div class="monthly-grid" id="monthly-grid"></div>
+                </div>
+            </div>
+
+            <!-- Notes Tab -->
+            <div id="notes-tab" class="tab-content">
+                <div class="notes-container">
+                    <h2>Notes</h2>
+                    <div id="notes-list"></div>
+                </div>
+            </div>
+
+            <!-- Lists Tab -->
+            <div id="lists-tab" class="tab-content">
+                <div class="notes-container">
+                    <h2>Lists</h2>
+                    <div id="lists-container"></div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings-tab" class="tab-content">
+                <div class="settings-container">
+                    <h2>Settings</h2>
+                    
+                    <div class="settings-group">
+                        <h3>Theme</h3>
+                        <select class="theme-selector" id="theme-selector" onchange="changeTheme(this.value)">
+                            <option value="default">Default (Purple)</option>
+                            <option value="minimal">Soft Minimal</option>
+                            <option value="sage">Sage</option>
+                            <option value="dark">Soft Dark</option>
+                            <option value="twilight">Twilight</option>
+                            <option value="midnight">Midnight</option>
+                            <option value="terminal">Terminal</option>
+                        </select>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>Weekly Workout Goals (minutes)</h3>
+                        <div class="goal-input-group">
+                            <span class="goal-label">Cardio:</span>
+                            <input type="number" class="goal-input" id="goal-Cardio" min="0">
+                        </div>
+                        <div class="goal-input-group">
+                            <span class="goal-label">Strength:</span>
+                            <input type="number" class="goal-input" id="goal-Strength" min="0">
+                        </div>
+                        <div class="goal-input-group">
+                            <span class="goal-label">Mobility:</span>
+                            <input type="number" class="goal-input" id="goal-Mobility" min="0">
+                        </div>
+                        <div class="goal-input-group">
+                            <span class="goal-label">Daily Stretch:</span>
+                            <input type="number" class="goal-input" id="goal-Daily-Stretch" min="0">
+                        </div>
+                        <button class="btn btn-primary" onclick="saveGoals()" style="margin-top: 15px; width: 200px;">Save Goals</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Button -->
+    <button class="add-btn" onclick="handleAddButton()">+</button>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-overlay" onclick="closeModal()"></div>
+        <div class="modal-content">
+            <div class="modal-header" id="modal-title">Add Reminder</div>
+            <form id="event-form">
+                <div class="checkbox-group" id="period-day-group">
+                    <input type="checkbox" id="period-day" onchange="togglePeriodDay()">
+                    <label for="period-day">Mark as Period Day</label>
+                </div>
+
+                <div id="regular-fields">
+                    <div class="form-group">
+                        <label for="title">Title</label>
+                        <input type="text" id="title" placeholder="Enter reminder title">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="details">Details (optional)</label>
+                        <textarea id="details" rows="3" placeholder="Additional details"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="date">Date</label>
+                        <input type="date" id="date">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="time">Time (optional)</label>
+                        <input type="time" id="time">
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="recurring" onchange="toggleRecurring()">
+                        <label for="recurring">Recurring</label>
+                    </div>
+                    
+                    <div class="form-group" id="recurrence-options" style="display: none;">
+                        <label for="recurrence">Repeat</label>
+                        <select id="recurrence">
+                            <option value="daily">Every Day</option>
+                            <option value="weekly">Every Week</option>
+                            <option value="monthly">Every Month</option>
+                            <option value="yearly">Every Year</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveEvent()">Save</button>
+                    <button type="button" class="btn btn-danger" id="delete-btn" style="display: none;" onclick="deleteEvent()">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Theme definitions
+        const themes = {
+            default: {
+                '--bg-gradient-start': '#667eea',
+                '--bg-gradient-end': '#764ba2',
+                '--text-primary': '#333',
+                '--bg-primary': 'rgba(255, 255, 255, 0.95)',
+                '--day-bg': 'white',
+                '--border-color': '#e0e0e0',
+                '--accent-color': '#667eea',
+                '--accent-hover': '#764ba2',
+                '--task-bg': 'rgba(102, 126, 234, 0.1)',
+                '--task-border': '#667eea',
+                '--period-bg': 'rgba(255, 107, 107, 0.15)',
+                '--period-color': '#ff6b6b',
+                '--ovulation-bg': 'rgba(0, 123, 255, 0.15)',
+                '--ovulation-color': '#007bff'
+            },
+            minimal: {
+                '--bg-gradient-start': '#fafafa',
+                '--bg-gradient-end': '#f0f0f0',
+                '--text-primary': '#4a5568',
+                '--bg-primary': 'rgba(255, 255, 255, 0.95)',
+                '--day-bg': 'white',
+                '--border-color': '#e2e8f0',
+                '--accent-color': '#4a5568',
+                '--accent-hover': '#2d3748',
+                '--task-bg': 'rgba(74, 85, 104, 0.05)',
+                '--task-border': '#4a5568',
+                '--period-bg': 'rgba(252, 129, 129, 0.15)',
+                '--period-color': '#fc8181',
+                '--ovulation-bg': 'rgba(66, 153, 225, 0.15)',
+                '--ovulation-color': '#4299e1'
+            },
+            sage: {
+                '--bg-gradient-start': '#f0f4f0',
+                '--bg-gradient-end': '#e8ede8',
+                '--text-primary': '#4a5a4a',
+                '--bg-primary': 'rgba(250, 252, 250, 0.95)',
+                '--day-bg': '#fafcfa',
+                '--border-color': '#d4e0d4',
+                '--accent-color': '#7d9b7d',
+                '--accent-hover': '#5a785a',
+                '--task-bg': 'rgba(125, 155, 125, 0.1)',
+                '--task-border': '#7d9b7d',
+                '--period-bg': 'rgba(232, 160, 160, 0.15)',
+                '--period-color': '#e8a0a0',
+                '--ovulation-bg': 'rgba(160, 200, 232, 0.15)',
+                '--ovulation-color': '#a0c8e8'
+            },
+            dark: {
+                '--bg-gradient-start': '#1f2937',
+                '--bg-gradient-end': '#111827',
+                '--text-primary': '#e5e7eb',
+                '--bg-primary': 'rgba(31, 41, 55, 0.95)',
+                '--day-bg': '#374151',
+                '--border-color': '#4b5563',
+                '--accent-color': '#6366f1',
+                '--accent-hover': '#818cf8',
+                '--task-bg': 'rgba(99, 102, 241, 0.1)',
+                '--task-border': '#6366f1',
+                '--period-bg': 'rgba(248, 113, 113, 0.15)',
+                '--period-color': '#f87171',
+                '--ovulation-bg': 'rgba(59, 130, 246, 0.15)',
+                '--ovulation-color': '#3b82f6'
+            },
+            twilight: {
+                '--bg-gradient-start': '#2e2438',
+                '--bg-gradient-end': '#1a1523',
+                '--text-primary': '#e8dff2',
+                '--bg-primary': 'rgba(46, 36, 56, 0.95)',
+                '--day-bg': '#3d3147',
+                '--border-color': '#5e4a78',
+                '--accent-color': '#9f86c0',
+                '--accent-hover': '#be95c4',
+                '--task-bg': 'rgba(159, 134, 192, 0.1)',
+                '--task-border': '#9f86c0',
+                '--period-bg': 'rgba(232, 160, 184, 0.15)',
+                '--period-color': '#e8a0b8',
+                '--ovulation-bg': 'rgba(160, 184, 232, 0.15)',
+                '--ovulation-color': '#a0b8e8'
+            },
+            midnight: {
+                '--bg-gradient-start': '#0f0c29',
+                '--bg-gradient-end': '#302b63',
+                '--text-primary': '#e0e0e0',
+                '--bg-primary': 'rgba(15, 12, 41, 0.95)',
+                '--day-bg': 'rgba(48, 43, 99, 0.6)',
+                '--border-color': '#524a8e',
+                '--accent-color': '#17ead9',
+                '--accent-hover': '#6078ea',
+                '--task-bg': 'rgba(23, 234, 217, 0.1)',
+                '--task-border': '#17ead9',
+                '--period-bg': 'rgba(255, 0, 110, 0.15)',
+                '--period-color': '#ff006e',
+                '--ovulation-bg': 'rgba(96, 120, 234, 0.15)',
+                '--ovulation-color': '#6078ea'
+            },
+            terminal: {
+                '--bg-gradient-start': '#000000',
+                '--bg-gradient-end': '#0a0a0a',
+                '--text-primary': '#00ff00',
+                '--bg-primary': 'rgba(0, 0, 0, 0.95)',
+                '--day-bg': '#000000',
+                '--border-color': '#00ff00',
+                '--accent-color': '#00ff00',
+                '--accent-hover': '#00cc00',
+                '--task-bg': 'rgba(0, 255, 0, 0.1)',
+                '--task-border': '#00ff00',
+                '--period-bg': 'rgba(255, 0, 64, 0.15)',
+                '--period-color': '#ff0040',
+                '--ovulation-bg': 'rgba(0, 128, 255, 0.15)',
+                '--ovulation-color': '#0080ff'
+            }
+        };
+
+        // Application State
+        let currentWeekStart = new Date();
+        currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay());
+        let currentView = 'weekly';
+        let currentTab = 'calendar';
+        let currentTheme = 'default';
+        let selectedDate = null;
+        let editingEventId = null;
+        let draggedTask = null;
+        let draggedFromDate = null;
+        let draggedOverElement = null;
+        let draggedList = null;
+        let draggedListItem = null;
+        
+        // Data Storage
+        let events = [];
+        let periodDays = [];  // Simple array of period day dates
+        let periodData = {periods: [], avgCycleLength: 28, avgPeriodLength: 5};
+        let workouts = {};
+        let workoutGoals = {
+            'Cardio': 150,
+            'Strength': 75,
+            'Mobility': 30,
+            'Daily Stretch': 60
+        };
+        let notes = [];
+        let lists = [];
+
+        // Workout types
+        const workoutTypes = ['Cardio', 'Strength', 'Mobility', 'Daily Stretch'];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Clear all data for fresh start (remove this line after testing)
+            localStorage.clear();
+            
+            loadData();
+            loadSettings();
+            applyTheme(currentTheme);
+            renderWeeklyView();
+            renderNotes();
+            renderLists();
+            setupDateInput();
+            updateMobileGoalWidget();
+        });
+
+        function loadData() {
+            events = JSON.parse(localStorage.getItem('events') || '[]');
+            periodDays = JSON.parse(localStorage.getItem('periodDays') || '[]');
+            periodData = JSON.parse(localStorage.getItem('periodData') || '{"periods": [], "avgCycleLength": 28, "avgPeriodLength": 5}');
+            workouts = JSON.parse(localStorage.getItem('workouts') || '{}');
+            workoutGoals = JSON.parse(localStorage.getItem('workoutGoals') || JSON.stringify(workoutGoals));
+            notes = JSON.parse(localStorage.getItem('notes') || '[]');
+            lists = JSON.parse(localStorage.getItem('lists') || '[]');
+            currentTheme = localStorage.getItem('theme') || 'default';
+            
+            // Update period data based on period days
+            updatePeriodDataFromDays();
+        }
+
+        function setupDateInput() {
+            const dateInput = document.getElementById('date');
+            const today = new Date();
+            dateInput.value = today.toISOString().split('T')[0];
+            dateInput.min = '2020-01-01';
+            dateInput.max = '2030-12-31';
+        }
+
+        // Theme functions
+        function changeTheme(themeName) {
+            currentTheme = themeName;
+            localStorage.setItem('theme', themeName);
+            applyTheme(themeName);
+        }
+
+        function applyTheme(themeName) {
+            const theme = themes[themeName] || themes.default;
+            const root = document.documentElement;
+            
+            Object.keys(theme).forEach(property => {
+                root.style.setProperty(property, theme[property]);
+            });
+            
+            // Update theme selector
+            const selector = document.getElementById('theme-selector');
+            if (selector) selector.value = themeName;
+        }
+
+        // Settings functions
+        function loadSettings() {
+            workoutTypes.forEach(type => {
+                const input = document.getElementById(`goal-${type.replace(' ', '-')}`);
+                if (input) {
+                    input.value = workoutGoals[type] || 0;
+                }
+            });
+        }
+
+        function saveGoals() {
+            workoutTypes.forEach(type => {
+                const input = document.getElementById(`goal-${type.replace(' ', '-')}`);
+                if (input) {
+                    workoutGoals[type] = parseInt(input.value) || 0;
+                }
+            });
+            localStorage.setItem('workoutGoals', JSON.stringify(workoutGoals));
+            alert('Goals saved!');
+            if (currentView === 'weekly') {
+                renderWorkoutTracker();
+                updateMobileGoalWidget();
+            }
+        }
+
+        // Mobile Goal Widget
+        function updateMobileGoalWidget() {
+            const widget = document.getElementById('goal-mini-display');
+            if (!widget) return;
+            
+            const weekDates = [];
+            for (let i = 1; i <= 7; i++) {
+                const date = new Date(currentWeekStart);
+                const dayOffset = i === 7 ? 0 : i;
+                date.setDate(currentWeekStart.getDate() + dayOffset);
+                weekDates.push(formatDate(date));
+            }
+            
+            let html = '';
+            workoutTypes.forEach(type => {
+                let weekTotal = 0;
+                weekDates.forEach(dateStr => {
+                    weekTotal += parseInt(workouts[`${dateStr}-${type}`] || 0);
+                });
+                
+                const goal = workoutGoals[type] || 0;
+                const percent = goal > 0 ? Math.round((weekTotal / goal) * 100) : 0;
+                
+                html += `
+                    <div class="goal-stat">
+                        <div class="goal-label">${type.split(' ')[0]}</div>
+                        <div class="goal-value">${percent}%</div>
+                    </div>
+                `;
+            });
+            
+            widget.innerHTML = html;
+        }
+
+        // Open workout modal
+        function openWorkoutModal() {
+            // Use selected date or today
+            const workoutDate = selectedDate || new Date();
+            const dateStr = formatDate(workoutDate);
+            const displayDate = workoutDate.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                month: 'short', 
+                day: 'numeric',
+                year: 'numeric'
+            });
+            
+            // Create workout entry modal
+            const modalHtml = `
+                <div id="workout-modal" class="modal active">
+                    <div class="modal-overlay" onclick="document.getElementById('workout-modal').remove()"></div>
+                    <div class="modal-content">
+                        <div class="modal-header">Quick Workout Entry</div>
+                        <div style="padding: 20px;">
+                            <div style="text-align: center; font-size: 1.2em; color: var(--accent-color); margin-bottom: 20px; font-weight: bold;">
+                                ${displayDate}
+                            </div>
+                            ${workoutTypes.map(type => {
+                                const existingValue = workouts[`${dateStr}-${type}`] || '';
+                                return `
+                                    <div class="goal-input-group" style="margin: 15px 0;">
+                                        <span class="goal-label">${type}:</span>
+                                        <input type="number" class="goal-input" id="quick-${type.replace(' ', '-')}" 
+                                               value="${existingValue}" placeholder="0" min="0" style="width: 100px;">
+                                        <span style="margin-left: 10px;">minutes</span>
+                                    </div>
+                                `;
+                            }).join('')}
+                            <div class="button-group" style="margin-top: 20px;">
+                                <button class="btn btn-secondary" onclick="document.getElementById('workout-modal').remove()">Cancel</button>
+                                <button class="btn btn-primary" onclick="saveQuickWorkout('${dateStr}')">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add modal to body
+            const modalDiv = document.createElement('div');
+            modalDiv.innerHTML = modalHtml;
+            document.body.appendChild(modalDiv.firstElementChild);
+        }
+
+        function saveQuickWorkout(dateStr) {
+            workoutTypes.forEach(type => {
+                const input = document.getElementById(`quick-${type.replace(' ', '-')}`);
+                if (input) {
+                    const value = parseInt(input.value) || 0;
+                    const workoutKey = `${dateStr}-${type}`;
+                    if (value > 0) {
+                        workouts[workoutKey] = value;
+                    } else {
+                        delete workouts[workoutKey];
+                    }
+                }
+            });
+            
+            localStorage.setItem('workouts', JSON.stringify(workouts));
+            document.getElementById('workout-modal').remove();
+            
+            // Update displays
+            if (currentView === 'weekly') {
+                renderWorkoutTracker();
+            }
+            updateMobileGoalWidget();
+            
+            alert('Workout saved!');
+        }
+
+        // Jump to Today
+        function jumpToToday() {
+            const today = new Date();
+            currentWeekStart = new Date(today);
+            currentWeekStart.setDate(today.getDate() - today.getDay());
+            
+            if (currentView === 'weekly') {
+                renderWeeklyView();
+            } else {
+                renderMonthlyView();
+            }
+        }
+
+        // View Toggle
+        function toggleView(view) {
+            currentView = view;
+            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (view === 'weekly') {
+                document.getElementById('weekly-view').style.display = 'block';
+                document.getElementById('monthly-view').style.display = 'none';
+                renderWeeklyView();
+            } else {
+                document.getElementById('weekly-view').style.display = 'none';
+                document.getElementById('monthly-view').style.display = 'block';
+                renderMonthlyView();
+            }
+        }
+
+        // Tab Switching
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(`${tab}-tab`).classList.add('active');
+        }
+
+        // Week Navigation
+        function changeWeek(direction) {
+            if (currentView === 'weekly') {
+                currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
+                renderWeeklyView();
+            } else {
+                currentWeekStart.setMonth(currentWeekStart.getMonth() + direction);
+                renderMonthlyView();
+            }
+        }
+
+        // Render Weekly View
+        function renderWeeklyView() {
+            const weekEnd = new Date(currentWeekStart);
+            weekEnd.setDate(currentWeekStart.getDate() + 6);
+            
+            document.getElementById('current-week').textContent = 
+                `Week of ${currentWeekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+            
+            renderWorkoutTracker();
+            renderWeeklyCalendar();
+            updateMobileGoalWidget();
+        }
+
+        // Render Workout Tracker
+        function renderWorkoutTracker() {
+            const header = document.getElementById('workout-header');
+            const tbody = document.getElementById('workout-tbody');
+            
+            // Clear existing content
+            header.innerHTML = '';
+            tbody.innerHTML = '';
+            
+            // Create header row
+            const headerCells = ['Activity', 'M', 'T', 'W', 'T', 'F', 'S', 'S', '% of Goal'];
+            headerCells.forEach(cell => {
+                const th = document.createElement('th');
+                th.textContent = cell;
+                header.appendChild(th);
+            });
+            
+            // Get dates for the week (Monday to Sunday)
+            const weekDates = [];
+            for (let i = 1; i <= 7; i++) {
+                const date = new Date(currentWeekStart);
+                const dayOffset = i === 7 ? 0 : i;
+                date.setDate(currentWeekStart.getDate() + dayOffset);
+                weekDates.push(formatDate(date));
+            }
+            
+            // Activity rows
+            workoutTypes.forEach(type => {
+                const row = document.createElement('tr');
+                
+                // Activity label
+                const labelCell = document.createElement('td');
+                labelCell.className = 'workout-label';
+                labelCell.textContent = type;
+                row.appendChild(labelCell);
+                
+                let weekTotal = 0;
+                
+                // Day inputs
+                weekDates.forEach(dateStr => {
+                    const cell = document.createElement('td');
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.className = 'workout-input';
+                    input.placeholder = '0';
+                    input.min = '0';
+                    input.max = '999';
+                    
+                    const workoutKey = `${dateStr}-${type}`;
+                    input.value = workouts[workoutKey] || '';
+                    weekTotal += parseInt(workouts[workoutKey] || 0);
+                    
+                    input.oninput = (e) => {
+                        const value = parseInt(e.target.value) || 0;
+                        if (value > 0) {
+                            workouts[workoutKey] = value;
+                        } else {
+                            delete workouts[workoutKey];
+                        }
+                        localStorage.setItem('workouts', JSON.stringify(workouts));
+                        updateWorkoutPercentages();
+                        updateMobileGoalWidget();
+                    };
+                    
+                    cell.appendChild(input);
+                    row.appendChild(cell);
+                });
+                
+                // % of Goal column
+                const percentCell = document.createElement('td');
+                percentCell.id = `percent-${type.replace(' ', '-')}`;
+                const goal = workoutGoals[type] || 0;
+                if (goal > 0) {
+                    const percent = Math.round((weekTotal / goal) * 100);
+                    percentCell.textContent = `${percent}%`;
+                    if (percent >= 100) {
+                        percentCell.className = 'percent-good';
+                    } else if (percent >= 70) {
+                        percentCell.className = 'percent-ok';
+                    } else {
+                        percentCell.className = 'percent-low';
+                    }
+                } else {
+                    percentCell.textContent = '-';
+                }
+                row.appendChild(percentCell);
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateWorkoutPercentages() {
+            const weekDates = [];
+            for (let i = 1; i <= 7; i++) {
+                const date = new Date(currentWeekStart);
+                const dayOffset = i === 7 ? 0 : i;
+                date.setDate(currentWeekStart.getDate() + dayOffset);
+                weekDates.push(formatDate(date));
+            }
+            
+            workoutTypes.forEach(type => {
+                let weekTotal = 0;
+                weekDates.forEach(dateStr => {
+                    weekTotal += parseInt(workouts[`${dateStr}-${type}`] || 0);
+                });
+                
+                const percentCell = document.getElementById(`percent-${type.replace(' ', '-')}`);
+                if (percentCell) {
+                    const goal = workoutGoals[type] || 0;
+                    if (goal > 0) {
+                        const percent = Math.round((weekTotal / goal) * 100);
+                        percentCell.textContent = `${percent}%`;
+                        percentCell.className = '';
+                        if (percent >= 100) {
+                            percentCell.className = 'percent-good';
+                        } else if (percent >= 70) {
+                            percentCell.className = 'percent-ok';
+                        } else {
+                            percentCell.className = 'percent-low';
+                        }
+                    } else {
+                        percentCell.textContent = '-';
+                    }
+                }
+            });
+        }
+
+        // Render Weekly Calendar
+        function renderWeeklyCalendar() {
+            const grid = document.getElementById('weekly-grid');
+            grid.innerHTML = '';
+            
+            const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const today = new Date();
+            
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(currentWeekStart);
+                date.setDate(currentWeekStart.getDate() + i);
+                
+                const dayColumn = document.createElement('div');
+                dayColumn.className = 'day-column drop-zone';
+                dayColumn.dataset.date = formatDate(date);
+                
+                // Check if today
+                if (date.toDateString() === today.toDateString()) {
+                    dayColumn.classList.add('today');
+                }
+                
+                // Check for period or ovulation
+                const periodStatus = getPeriodStatus(date);
+                if (periodStatus === 'period') {
+                    dayColumn.classList.add('period');
+                } else if (periodStatus === 'ovulation') {
+                    dayColumn.classList.add('ovulation');
+                }
+                
+                // Day header
+                const header = document.createElement('div');
+                header.className = 'day-header';
+                header.innerHTML = `
+                    <div>${dayNames[i]}</div>
+                    <div class="day-date">${date.getDate()}</div>
+                `;
+                header.onclick = (e) => {
+                    e.stopPropagation();
+                    selectedDate = date;  // Set selected date for workout modal
+                    openModal(date);
+                };
+                dayColumn.appendChild(header);
+                
+                // Task container
+                const taskContainer = document.createElement('div');
+                taskContainer.className = 'task-container';
+                
+                // Add tasks
+                const tasks = getEventsForDate(date);
+                tasks.forEach(task => {
+                    const taskEl = createTaskElement(task, date);
+                    taskContainer.appendChild(taskEl);
+                });
+                
+                dayColumn.appendChild(taskContainer);
+                
+                // Click on empty space to add task
+                dayColumn.onclick = (e) => {
+                    if (e.target === dayColumn || e.target === taskContainer) {
+                        selectedDate = date;  // Set selected date for workout modal
+                        openModal(date);
+                    }
+                };
+                
+                // Setup drag and drop
+                setupDragAndDrop(dayColumn);
+                
+                grid.appendChild(dayColumn);
+            }
+        }
+
+        // Create draggable task element
+        function createTaskElement(task, date) {
+            const taskEl = document.createElement('div');
+            taskEl.className = 'task-item';
+            taskEl.draggable = true;
+            taskEl.dataset.taskId = task.id;
+            taskEl.dataset.date = formatDate(date);
+            
+            if (task.completed) taskEl.classList.add('completed');
+            
+            if (task.time) {
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'task-time';
+                timeDiv.textContent = task.time;
+                taskEl.appendChild(timeDiv);
+            }
+            
+            const titleDiv = document.createElement('div');
+            titleDiv.textContent = task.title;
+            taskEl.appendChild(titleDiv);
+            
+            // Click to edit
+            taskEl.onclick = (e) => {
+                e.stopPropagation();
+                if (!e.target.closest('.task-item').classList.contains('dragging')) {
+                    editEvent(task);
+                }
+            };
+            
+            // Double click to toggle complete
+            taskEl.ondblclick = (e) => {
+                e.stopPropagation();
+                task.completed = !task.completed;
+                localStorage.setItem('events', JSON.stringify(events));
+                renderWeeklyCalendar();
+            };
+            
+            // Drag events
+            taskEl.ondragstart = (e) => {
+                draggedTask = task;
+                draggedFromDate = formatDate(date);
+                taskEl.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', taskEl.innerHTML);
+            };
+            
+            taskEl.ondragend = (e) => {
+                taskEl.classList.remove('dragging');
+                document.querySelectorAll('.drag-over-top, .drag-over-bottom').forEach(el => {
+                    el.classList.remove('drag-over-top', 'drag-over-bottom');
+                });
+            };
+            
+            // Allow dropping on other tasks for reordering
+            taskEl.ondragover = (e) => {
+                e.preventDefault();
+                if (draggedTask && draggedTask.id !== task.id) {
+                    const rect = taskEl.getBoundingClientRect();
+                    const midpoint = rect.top + rect.height / 2;
+                    
+                    taskEl.classList.remove('drag-over-top', 'drag-over-bottom');
+                    
+                    if (e.clientY < midpoint) {
+                        taskEl.classList.add('drag-over-top');
+                    } else {
+                        taskEl.classList.add('drag-over-bottom');
+                    }
+                    draggedOverElement = {element: taskEl, task: task, position: e.clientY < midpoint ? 'before' : 'after'};
+                }
+            };
+            
+            taskEl.ondragleave = (e) => {
+                taskEl.classList.remove('drag-over-top', 'drag-over-bottom');
+            };
+            
+            taskEl.ondrop = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                taskEl.classList.remove('drag-over-top', 'drag-over-bottom');
+                
+                if (draggedTask && draggedOverElement && draggedTask.id !== task.id) {
+                    // Reorder tasks
+                    const targetDate = taskEl.dataset.date;
+                    draggedTask.date = targetDate;
+                    
+                    // Get all tasks for this date
+                    let dayTasks = getEventsForDate(new Date(targetDate));
+                    
+                    // Remove dragged task from array
+                    dayTasks = dayTasks.filter(t => t.id !== draggedTask.id);
+                    
+                    // Find index of target task
+                    const targetIndex = dayTasks.findIndex(t => t.id === task.id);
+                    
+                    // Insert dragged task at appropriate position
+                    if (draggedOverElement.position === 'before') {
+                        dayTasks.splice(targetIndex, 0, draggedTask);
+                    } else {
+                        dayTasks.splice(targetIndex + 1, 0, draggedTask);
+                    }
+                    
+                    // Update task order property
+                    dayTasks.forEach((t, index) => {
+                        t.order = index;
+                    });
+                    
+                    localStorage.setItem('events', JSON.stringify(events));
+                    renderWeeklyCalendar();
+                    
+                    draggedTask = null;
+                    draggedFromDate = null;
+                    draggedOverElement = null;
+                }
+            };
+            
+            return taskEl;
+        }
+
+        // Setup drag and drop for day columns
+        function setupDragAndDrop(dayColumn) {
+            dayColumn.ondragover = (e) => {
+                e.preventDefault();
+                
+                if (!e.target.classList.contains('task-item')) {
+                    dayColumn.classList.add('drag-over');
+                }
+            };
+            
+            dayColumn.ondragleave = (e) => {
+                if (!dayColumn.contains(e.relatedTarget)) {
+                    dayColumn.classList.remove('drag-over');
+                }
+            };
+            
+            dayColumn.ondrop = (e) => {
+                e.preventDefault();
+                dayColumn.classList.remove('drag-over');
+                
+                if (!e.target.classList.contains('task-item') && draggedTask && !draggedOverElement) {
+                    const newDate = dayColumn.dataset.date;
+                    
+                    if (draggedTask.recurring) {
+                        const newTask = {...draggedTask, id: Date.now(), date: newDate, recurring: false};
+                        events.push(newTask);
+                    } else {
+                        draggedTask.date = newDate;
+                    }
+                    
+                    localStorage.setItem('events', JSON.stringify(events));
+                    renderWeeklyCalendar();
+                    
+                    draggedTask = null;
+                    draggedFromDate = null;
+                }
+            };
+        }
+
+        // Render Monthly View
+        function renderMonthlyView() {
+            const year = currentWeekStart.getFullYear();
+            const month = currentWeekStart.getMonth();
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const today = new Date();
+            
+            document.getElementById('current-week').textContent = 
+                new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            
+            const grid = document.getElementById('monthly-grid');
+            grid.innerHTML = '';
+            
+            // Day headers
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayNames.forEach(day => {
+                const header = document.createElement('div');
+                header.className = 'month-day-header';
+                header.textContent = day;
+                grid.appendChild(header);
+            });
+            
+            // Empty cells before month starts
+            for (let i = 0; i < firstDay; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'month-day-cell other-month';
+                grid.appendChild(empty);
+            }
+            
+            // Days of month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const dayCell = createMonthDayCell(date, day);
+                grid.appendChild(dayCell);
+            }
+        }
+
+        // Create Monthly Day Cell
+        function createMonthDayCell(date, day) {
+            const cell = document.createElement('div');
+            cell.className = 'month-day-cell';
+            
+            const today = new Date();
+            
+            // Check if today
+            if (date.toDateString() === today.toDateString()) {
+                cell.classList.add('today');
+            }
+            
+            // Check for period or ovulation
+            const periodStatus = getPeriodStatus(date);
+            if (periodStatus === 'period') {
+                cell.classList.add('period');
+            } else if (periodStatus === 'ovulation') {
+                cell.classList.add('ovulation');
+            }
+            
+            // Day number
+            const dayNum = document.createElement('div');
+            dayNum.className = 'month-day-number';
+            dayNum.textContent = day;
+            cell.appendChild(dayNum);
+            
+            // Tasks for this day
+            const dayTasks = getEventsForDate(date);
+            if (dayTasks.length > 0) {
+                const tasksDiv = document.createElement('div');
+                tasksDiv.className = 'month-tasks';
+                dayTasks.slice(0, 3).forEach(task => {
+                    const taskDot = document.createElement('div');
+                    taskDot.style.fontSize = '0.8em';
+                    taskDot.textContent = '• ' + task.title;
+                    tasksDiv.appendChild(taskDot);
+                });
+                if (dayTasks.length > 3) {
+                    const more = document.createElement('div');
+                    more.style.fontSize = '0.7em';
+                    more.textContent = `+${dayTasks.length - 3} more`;
+                    tasksDiv.appendChild(more);
+                }
+                cell.appendChild(tasksDiv);
+            }
+            
+            // Click to go to that week
+            cell.onclick = () => {
+                currentWeekStart = new Date(date);
+                currentWeekStart.setDate(date.getDate() - date.getDay());
+                toggleView('weekly');
+                document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelector('.view-btn:first-child').classList.add('active');
+            };
+            
+            return cell;
+        }
+
+        // Get events for a specific date
+        function getEventsForDate(date) {
+            const dateStr = formatDate(date);
+            let dayEvents = events.filter(e => {
+                if (e.date === dateStr) return true;
+                
+                // Check recurring events
+                if (e.recurring) {
+                    const eventDate = new Date(e.date);
+                    if (eventDate > date) return false;
+                    
+                    if (e.recurrence === 'daily') return true;
+                    if (e.recurrence === 'weekly' && eventDate.getDay() === date.getDay()) return true;
+                    if (e.recurrence === 'monthly' && eventDate.getDate() === date.getDate()) return true;
+                    if (e.recurrence === 'yearly' && 
+                        eventDate.getDate() === date.getDate() && 
+                        eventDate.getMonth() === date.getMonth()) return true;
+                }
+                return false;
+            });
+            
+            // Sort by order, then by time
+            return dayEvents.sort((a, b) => {
+                // Then by order if exists
+                if (a.order !== undefined && b.order !== undefined) {
+                    return a.order - b.order;
+                }
+                
+                // Then by time
+                if (a.time && b.time) return a.time.localeCompare(b.time);
+                if (a.time) return -1;
+                if (b.time) return 1;
+                return 0;
+            });
+        }
+
+        // Period tracking functions - Flo style
+        function updatePeriodDataFromDays() {
+            if (periodDays.length === 0) {
+                periodData.periods = [];
+                return;
+            }
+            
+            // Sort period days
+            periodDays.sort();
+            
+            // Group consecutive days into periods
+            const periods = [];
+            let currentPeriod = null;
+            
+            periodDays.forEach(dateStr => {
+                const date = new Date(dateStr);
+                
+                if (!currentPeriod) {
+                    currentPeriod = { start: dateStr, end: dateStr };
+                } else {
+                    const lastDate = new Date(currentPeriod.end);
+                    const daysDiff = Math.floor((date - lastDate) / (1000 * 60 * 60 * 24));
+                    
+                    if (daysDiff <= 1) {
+                        // Consecutive or same day, extend period
+                        currentPeriod.end = dateStr;
+                    } else {
+                        // Gap found, start new period
+                        periods.push(currentPeriod);
+                        currentPeriod = { start: dateStr, end: dateStr };
+                    }
+                }
+            });
+            
+            if (currentPeriod) {
+                periods.push(currentPeriod);
+            }
+            
+            periodData.periods = periods;
+            updatePeriodAverages();
+        }
+        
+        function getPeriodStatus(date) {
+            const dateStr = formatDate(date);
+            
+            // Check if it's a marked period day
+            if (periodDays.includes(dateStr)) {
+                return 'period';
+            }
+            
+            // Check for predicted periods and ovulation
+            if (periodData.periods.length > 0) {
+                const lastPeriod = periodData.periods[periodData.periods.length - 1];
+                const lastStart = new Date(lastPeriod.start);
+                const sixMonthsFromNow = new Date();
+                sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
+                
+                // Check next predicted cycles
+                for (let i = 1; i <= 12; i++) {
+                    const predictedStart = new Date(lastStart);
+                    predictedStart.setDate(lastStart.getDate() + (periodData.avgCycleLength * i));
+                    
+                    if (predictedStart > sixMonthsFromNow) break;
+                    
+                    const predictedEnd = new Date(predictedStart);
+                    predictedEnd.setDate(predictedStart.getDate() + periodData.avgPeriodLength - 1);
+                    
+                    if (date >= predictedStart && date <= predictedEnd) {
+                        return 'period';
+                    }
+                    
+                    // Check ovulation (around day 14 of predicted cycle)
+                    const ovulationStart = new Date(predictedStart);
+                    ovulationStart.setDate(predictedStart.getDate() + 12);
+                    const ovulationEnd = new Date(predictedStart);
+                    ovulationEnd.setDate(predictedStart.getDate() + 14);
+                    
+                    if (date >= ovulationStart && date <= ovulationEnd) {
+                        return 'ovulation';
+                    }
+                }
+                
+                // Check ovulation for current cycle
+                const daysSinceLastPeriod = Math.floor((date - lastStart) / (1000 * 60 * 60 * 24));
+                if (daysSinceLastPeriod >= 12 && daysSinceLastPeriod <= 14) {
+                    return 'ovulation';
+                }
+            }
+            
+            return null;
+        }
+
+        function updatePeriodAverages() {
+            if (periodData.periods.length < 2) return;
+            
+            // Calculate average cycle length (days between period starts)
+            let totalCycleDays = 0;
+            let cycleCount = 0;
+            
+            for (let i = 1; i < periodData.periods.length; i++) {
+                const prevStart = new Date(periodData.periods[i-1].start);
+                const currentStart = new Date(periodData.periods[i].start);
+                const daysBetween = Math.floor((currentStart - prevStart) / (1000 * 60 * 60 * 24));
+                if (daysBetween > 0 && daysBetween < 60) { // Sanity check
+                    totalCycleDays += daysBetween;
+                    cycleCount++;
+                }
+            }
+            
+            if (cycleCount > 0) {
+                periodData.avgCycleLength = Math.round(totalCycleDays / cycleCount);
+            }
+            
+            // Calculate average period length
+            let totalPeriodDays = 0;
+            let periodCount = 0;
+            
+            for (let period of periodData.periods) {
+                const start = new Date(period.start);
+                const end = new Date(period.end);
+                const days = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+                if (days > 0 && days < 15) { // Sanity check
+                    totalPeriodDays += days;
+                    periodCount++;
+                }
+            }
+            
+            if (periodCount > 0) {
+                periodData.avgPeriodLength = Math.round(totalPeriodDays / periodCount);
+            }
+            
+            localStorage.setItem('periodData', JSON.stringify(periodData));
+        }
+
+        // Handle Add Button
+        function handleAddButton() {
+            if (currentTab === 'calendar') {
+                openModal();
+            } else if (currentTab === 'notes') {
+                addNote();
+            } else if (currentTab === 'lists') {
+                addList();
+            }
+        }
+
+        // Modal functions
+        function openModal(date = null) {
+            selectedDate = date || new Date();
+            editingEventId = null;
+            document.getElementById('modal').classList.add('active');
+            document.getElementById('modal-title').textContent = 'Add Reminder';
+            document.getElementById('event-form').reset();
+            document.getElementById('date').value = formatDate(selectedDate);
+            document.getElementById('delete-btn').style.display = 'none';
+            document.getElementById('regular-fields').style.display = 'block';
+            
+            // Check if this date is already marked as a period day
+            const dateStr = formatDate(selectedDate);
+            const isPeriodDay = periodDays.includes(dateStr);
+            document.getElementById('period-day').checked = isPeriodDay;
+            
+            if (isPeriodDay) {
+                document.getElementById('period-day-group').classList.add('period-selected');
+            } else {
+                document.getElementById('period-day-group').classList.remove('period-selected');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+            editingEventId = null;
+        }
+
+        function editEvent(event) {
+            editingEventId = event.id;
+            selectedDate = new Date(event.date);
+            document.getElementById('modal').classList.add('active');
+            
+            // Regular event
+            document.getElementById('modal-title').textContent = 'Edit Reminder';
+            document.getElementById('title').value = event.title;
+            document.getElementById('details').value = event.details || '';
+            document.getElementById('time').value = event.time || '';
+            document.getElementById('recurring').checked = event.recurring || false;
+            if (event.recurring) {
+                document.getElementById('recurrence-options').style.display = 'block';
+                document.getElementById('recurrence').value = event.recurrence;
+            }
+            
+            document.getElementById('date').value = event.date;
+            document.getElementById('delete-btn').style.display = 'block';
+            
+            // Check if this date is a period day
+            const isPeriodDay = periodDays.includes(event.date);
+            document.getElementById('period-day').checked = isPeriodDay;
+        }
+
+        function togglePeriodDay() {
+            const isPeriod = document.getElementById('period-day').checked;
+            document.getElementById('regular-fields').style.display = isPeriod ? 'none' : 'block';
+            if (isPeriod) {
+                document.getElementById('period-day-group').classList.add('period-selected');
+            } else {
+                document.getElementById('period-day-group').classList.remove('period-selected');
+            }
+        }
+
+        function toggleRecurring() {
+            const isRecurring = document.getElementById('recurring').checked;
+            document.getElementById('recurrence-options').style.display = isRecurring ? 'block' : 'none';
+        }
+
+        function saveEvent() {
+            const dateValue = document.getElementById('date').value;
+            
+            // Handle period day marking
+            const isPeriodDay = document.getElementById('period-day').checked;
+            const dateStr = dateValue;
+            const periodIndex = periodDays.indexOf(dateStr);
+            
+            if (isPeriodDay && periodIndex === -1) {
+                // Add period day
+                periodDays.push(dateStr);
+                periodDays.sort();
+                localStorage.setItem('periodDays', JSON.stringify(periodDays));
+                updatePeriodDataFromDays();
+                localStorage.setItem('periodData', JSON.stringify(periodData));
+            } else if (!isPeriodDay && periodIndex !== -1) {
+                // Remove period day
+                periodDays.splice(periodIndex, 1);
+                localStorage.setItem('periodDays', JSON.stringify(periodDays));
+                updatePeriodDataFromDays();
+                localStorage.setItem('periodData', JSON.stringify(periodData));
+            }
+            
+            // Handle regular event if not just marking period
+            if (!isPeriodDay) {
+                const title = document.getElementById('title').value;
+                if (!title) {
+                    // If no title and not period, just close
+                    closeModal();
+                    if (currentView === 'weekly') {
+                        renderWeeklyView();
+                    } else {
+                        renderMonthlyView();
+                    }
+                    return;
+                }
+                
+                const event = {
+                    id: editingEventId || Date.now(),
+                    date: dateValue,
+                    title: title,
+                    details: document.getElementById('details').value,
+                    time: document.getElementById('time').value,
+                    recurring: document.getElementById('recurring').checked,
+                    recurrence: document.getElementById('recurrence').value,
+                    completed: false
+                };
+                
+                if (editingEventId) {
+                    const index = events.findIndex(e => e.id === editingEventId);
+                    events[index] = event;
+                } else {
+                    events.push(event);
+                }
+                
+                localStorage.setItem('events', JSON.stringify(events));
+            }
+            
+            closeModal();
+            
+            if (currentView === 'weekly') {
+                renderWeeklyView();
+            } else {
+                renderMonthlyView();
+            }
+        }
+
+        function deleteEvent() {
+            if (editingEventId) {
+                events = events.filter(e => e.id !== editingEventId);
+                localStorage.setItem('events', JSON.stringify(events));
+                closeModal();
+                if (currentView === 'weekly') {
+                    renderWeeklyView();
+                } else {
+                    renderMonthlyView();
+                }
+            }
+        }
+
+        // Notes functions
+        function renderNotes() {
+            const container = document.getElementById('notes-list');
+            if (notes.length === 0) {
+                container.innerHTML = '<p style="color: #999;">No notes yet. Click + to add one.</p>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            notes.forEach((note, index) => {
+                const noteEl = createNoteElement(note, index);
+                container.appendChild(noteEl);
+            });
+            
+            setupNotesDragAndDrop();
+        }
+
+        function createNoteElement(note, index) {
+            const noteEl = document.createElement('div');
+            noteEl.className = 'note-item';
+            noteEl.draggable = true;
+            noteEl.dataset.noteIndex = index;
+            
+            const titleInput = document.createElement('input');
+            titleInput.className = 'note-title';
+            titleInput.value = note.title || '';
+            titleInput.placeholder = 'Note Title';
+            
+            titleInput.oninput = () => {
+                note.title = titleInput.value;
+                localStorage.setItem('notes', JSON.stringify(notes));
+            };
+            
+            const contentArea = document.createElement('textarea');
+            contentArea.className = 'note-content';
+            contentArea.value = note.content || '';
+            contentArea.placeholder = 'Start typing...';
+            
+            contentArea.oninput = () => {
+                note.content = contentArea.value;
+                localStorage.setItem('notes', JSON.stringify(notes));
+            };
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-note';
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.onclick = () => {
+                if (confirm('Delete this note?')) {
+                    notes.splice(index, 1);
+                    localStorage.setItem('notes', JSON.stringify(notes));
+                    renderNotes();
+                }
+            };
+            
+            noteEl.appendChild(titleInput);
+            noteEl.appendChild(contentArea);
+            noteEl.appendChild(deleteBtn);
+            
+            // Drag events for reordering
+            noteEl.ondragstart = (e) => {
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('noteIndex', index);
+                noteEl.classList.add('dragging');
+            };
+            
+            noteEl.ondragend = () => {
+                noteEl.classList.remove('dragging');
+            };
+            
+            return noteEl;
+        }
+
+        function setupNotesDragAndDrop() {
+            const container = document.getElementById('notes-list');
+            
+            container.ondragover = (e) => {
+                e.preventDefault();
+                const draggingNote = document.querySelector('.note-item.dragging');
+                const afterElement = getDragAfterElement(container, e.clientY, '.note-item:not(.dragging)');
+                
+                if (afterElement == null) {
+                    container.appendChild(draggingNote);
+                } else {
+                    container.insertBefore(draggingNote, afterElement);
+                }
+            };
+            
+            container.ondrop = (e) => {
+                e.preventDefault();
+                const draggedIndex = parseInt(e.dataTransfer.getData('noteIndex'));
+                const allNotes = [...document.querySelectorAll('.note-item')];
+                const newIndex = allNotes.findIndex(el => el.classList.contains('dragging'));
+                
+                if (draggedIndex !== newIndex) {
+                    const [draggedNote] = notes.splice(draggedIndex, 1);
+                    notes.splice(newIndex, 0, draggedNote);
+                    localStorage.setItem('notes', JSON.stringify(notes));
+                    renderNotes();
+                }
+            };
+        }
+
+        function addNote() {
+            const note = {
+                id: Date.now(),
+                title: '',
+                content: ''
+            };
+            notes.push(note);
+            localStorage.setItem('notes', JSON.stringify(notes));
+            renderNotes();
+        }
+
+        // Lists functions
+        function renderLists() {
+            const container = document.getElementById('lists-container');
+            if (lists.length === 0) {
+                container.innerHTML = '<p style="color: #999;">No lists yet. Click + to add one.</p>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            lists.forEach((list, listIndex) => {
+                const listEl = createListElement(list, listIndex);
+                container.appendChild(listEl);
+            });
+            
+            setupListsDragAndDrop();
+        }
+
+        function createListElement(list, listIndex) {
+            const listEl = document.createElement('div');
+            listEl.className = 'list-item';
+            listEl.draggable = true;
+            listEl.dataset.listIndex = listIndex;
+            
+            const titleInput = document.createElement('input');
+            titleInput.className = 'list-title-input';
+            titleInput.value = list.title || '';
+            titleInput.placeholder = 'List Title';
+            
+            titleInput.oninput = () => {
+                list.title = titleInput.value;
+                localStorage.setItem('lists', JSON.stringify(lists));
+            };
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-list';
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.onclick = () => {
+                if (confirm('Delete this list?')) {
+                    lists.splice(listIndex, 1);
+                    localStorage.setItem('lists', JSON.stringify(lists));
+                    renderLists();
+                }
+            };
+            
+            listEl.appendChild(titleInput);
+            listEl.appendChild(deleteBtn);
+            
+            const itemsList = document.createElement('ul');
+            itemsList.className = 'list-items';
+            itemsList.dataset.listIndex = listIndex;
+            
+            list.items.forEach((item, itemIndex) => {
+                const itemEl = createListItemElement(item, itemIndex, listIndex);
+                itemsList.appendChild(itemEl);
+            });
+            
+            listEl.appendChild(itemsList);
+            
+            // Add new item input
+            const addInput = document.createElement('input');
+            addInput.type = 'text';
+            addInput.className = 'add-list-item';
+            addInput.placeholder = '+ Add item';
+            addInput.onkeypress = (e) => {
+                if (e.key === 'Enter' && e.target.value.trim()) {
+                    list.items.push({ text: e.target.value, completed: false });
+                    localStorage.setItem('lists', JSON.stringify(lists));
+                    renderLists();
+                }
+            };
+            
+            listEl.appendChild(addInput);
+            
+            // List drag events
+            listEl.ondragstart = (e) => {
+                if (e.target === listEl || e.target === titleInput) {
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('listIndex', listIndex);
+                    listEl.classList.add('dragging');
+                    draggedList = list;
+                }
+            };
+            
+            listEl.ondragend = () => {
+                listEl.classList.remove('dragging');
+                draggedList = null;
+            };
+            
+            return listEl;
+        }
+
+        function createListItemElement(item, itemIndex, listIndex) {
+            const itemEl = document.createElement('li');
+            itemEl.className = 'list-entry';
+            itemEl.draggable = true;
+            itemEl.dataset.itemIndex = itemIndex;
+            itemEl.dataset.listIndex = listIndex;
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'list-checkbox';
+            checkbox.checked = item.completed;
+            checkbox.onchange = () => {
+                item.completed = !item.completed;
+                textInput.classList.toggle('completed');
+                localStorage.setItem('lists', JSON.stringify(lists));
+            };
+            
+            const textInput = document.createElement('input');
+            textInput.type = 'text';
+            textInput.className = 'list-text';
+            textInput.value = item.text;
+            if (item.completed) textInput.classList.add('completed');
+            
+            textInput.oninput = () => {
+                item.text = textInput.value;
+                localStorage.setItem('lists', JSON.stringify(lists));
+            };
+            
+            textInput.onkeypress = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const newItem = { text: '', completed: false };
+                    lists[listIndex].items.splice(itemIndex + 1, 0, newItem);
+                    localStorage.setItem('lists', JSON.stringify(lists));
+                    renderLists();
+                }
+            };
+            
+            itemEl.appendChild(checkbox);
+            itemEl.appendChild(textInput);
+            
+            // Item drag events
+            itemEl.ondragstart = (e) => {
+                e.stopPropagation();
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('itemData', JSON.stringify({
+                    listIndex: listIndex,
+                    itemIndex: itemIndex
+                }));
+                itemEl.classList.add('dragging');
+                draggedListItem = item;
+            };
+            
+            itemEl.ondragover = (e) => {
+                e.preventDefault();
+                if (draggedListItem && draggedListItem !== item) {
+                    const rect = itemEl.getBoundingClientRect();
+                    const midpoint = rect.top + rect.height / 2;
+                    
+                    itemEl.classList.remove('drag-over-top', 'drag-over-bottom');
+                    
+                    if (e.clientY < midpoint) {
+                        itemEl.classList.add('drag-over-top');
+                    } else {
+                        itemEl.classList.add('drag-over-bottom');
+                    }
+                }
+            };
+            
+            itemEl.ondragleave = () => {
+                itemEl.classList.remove('drag-over-top', 'drag-over-bottom');
+            };
+            
+            itemEl.ondrop = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                itemEl.classList.remove('drag-over-top', 'drag-over-bottom');
+                
+                const dragData = JSON.parse(e.dataTransfer.getData('itemData'));
+                const fromListIndex = dragData.listIndex;
+                const fromItemIndex = dragData.itemIndex;
+                
+                if (fromListIndex === listIndex && fromItemIndex === itemIndex) return;
+                
+                // Remove from original position
+                const [movedItem] = lists[fromListIndex].items.splice(fromItemIndex, 1);
+                
+                // Add to new position
+                const rect = itemEl.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;
+                let newIndex = itemIndex;
+                
+                if (fromListIndex === listIndex && fromItemIndex < itemIndex) {
+                    newIndex--;
+                }
+                
+                if (e.clientY > midpoint) {
+                    newIndex++;
+                }
+                
+                lists[listIndex].items.splice(newIndex, 0, movedItem);
+                localStorage.setItem('lists', JSON.stringify(lists));
+                renderLists();
+            };
+            
+            itemEl.ondragend = () => {
+                itemEl.classList.remove('dragging');
+                draggedListItem = null;
+            };
+            
+            return itemEl;
+        }
+
+        function setupListsDragAndDrop() {
+            const container = document.getElementById('lists-container');
+            
+            container.ondragover = (e) => {
+                e.preventDefault();
+                if (draggedList) {
+                    const draggingList = document.querySelector('.list-item.dragging');
+                    const afterElement = getDragAfterElement(container, e.clientY, '.list-item:not(.dragging)');
+                    
+                    if (afterElement == null) {
+                        container.appendChild(draggingList);
+                    } else {
+                        container.insertBefore(draggingList, afterElement);
+                    }
+                }
+            };
+            
+            container.ondrop = (e) => {
+                e.preventDefault();
+                if (draggedList) {
+                    const draggedIndex = parseInt(e.dataTransfer.getData('listIndex'));
+                    const allLists = [...document.querySelectorAll('.list-item')];
+                    const newIndex = allLists.findIndex(el => el.classList.contains('dragging'));
+                    
+                    if (draggedIndex !== newIndex) {
+                        const [movedList] = lists.splice(draggedIndex, 1);
+                        lists.splice(newIndex, 0, movedList);
+                        localStorage.setItem('lists', JSON.stringify(lists));
+                        renderLists();
+                    }
+                }
+            };
+        }
+
+        function getDragAfterElement(container, y, selector) {
+            const draggableElements = [...container.querySelectorAll(selector)];
+            
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        function addList() {
+            const list = {
+                id: Date.now().toString(),
+                title: '',
+                items: []
+            };
+            lists.push(list);
+            localStorage.setItem('lists', JSON.stringify(lists));
+            renderLists();
+        }
+
+        // Utility functions
+        function formatDate(date) {
+            return date.toISOString().split('T')[0];
+        }
+    </script>
+</body>
+</html>
